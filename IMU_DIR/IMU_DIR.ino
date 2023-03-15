@@ -74,30 +74,6 @@ void loop() {
   // Serial.print(angles[2]);
   // Serial.println(" | ");
 
-  // Compute angular velocity
-  cur_w[0] = (angles[1] - old_angles[0]); // Find Difference in value
-  cur_w[1] = (angles[2] - old_angles[1]); // Find Difference in value
-  cur_w[2] = (angles[0] - old_angles[2]); // Find Difference in value
-
-  old_angles[0] = (angles[1]);
-  old_angles[1] = (angles[2]);
-  old_angles[2] = (angles[0]);
-  // // if (wx < 0.5 && wx > -0.5) {wx = 0;} // Define sensitivity
-
-  if (*p_cnt < 20) {
-    total_w[0] = (total_w[0] + cur_w[0]);
-    total_w[1] = (total_w[1] + cur_w[1]);
-    total_w[2] = (total_w[2] + cur_w[2]);
-    // Serial.println(*p_total_wx);
-  }
-  else {
-    w[0] = (total_w[0] * 5); w[1] = (total_w[1] * 5); w[2] = (total_w[2] * 5); 
-    
-    total_w[0] = 0; total_w[1] = 0; total_w[2] = 0;
-    *p_cnt = -1;
-  }
-  *p_cnt = *p_cnt + 1;
-
   // Read Acceleration
   sixDOF.acc.readAccel(&int_accel[0], &int_accel[1], &int_accel[2]);
 
