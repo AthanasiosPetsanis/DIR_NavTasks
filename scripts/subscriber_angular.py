@@ -3,6 +3,7 @@ from math import radians, sqrt, sin, cos
 import rospy, numpy as np
 from statistics import mean
 from geometry_msgs.msg import Vector3
+from sensor_msgs.msg import Imu
 from thanos.General_Functions import now, tic, toc
 
 g = 9.81
@@ -11,6 +12,7 @@ b = 0.0
 er = 0
 w = [0, 0, 0]
 nof_samples = 51
+imu_msg = Imu()
 
 data_accel = np.zeros((nof_samples+1,3))
 accel_error = np.zeros(3)
@@ -55,9 +57,26 @@ def calibrate_accel(data):
     accel_error[2] = float(mean(data[:,2]))
     b=accel_error[2]/g
     return b
+
+def assign_imu_msg(angles, accel, w):
+    global imu_msg
+    # imu_msg.angular_velocity = angles
+
+    imu_msg.orientation.x = angles[0]
+    imu_msg.orientation.y = angles[1]
+    imu_msg.orientation.z = angles[2]
+
+    imu_msg.linear_acceleration.x = accel[0]
+    imu_msg.linear_acceleration.y = accel[1]
+    imu_msg.linear_acceleration.z = accel[2]
+
+    imu_msg.angular_velocity.x = w[0]
+    imu_msg.angular_velocity.y = w[1]
+    imu_msg.angular_velocity.z = w[2]
+
     
 def listener(dt=0.1):
-    global t, start, total_w, cur_w, old_angles, angles, accel, total_dt, data_accel, stop, stop2, b, nof_samples, w
+    global t, start, total_w, cur_w, old_angles, angles, accel, total_dt, data_accel, stop, stop2, b, nof_samples, w, imu_msg
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # name are launched, the previous one is kicked off. The
@@ -73,7 +92,7 @@ def listener(dt=0.1):
     rad_angles[1] = radians(angles[1])
     rad_angles[2] = radians(angles[2])
 
-    #  Compute angular velocity
+    #  Compute angular velocity from accel
     if(sqrt((accel[2]+g*cos(rad_angles[0]))**2 + (accel[1]+g*sin(rad_angles[0]))**2) >= k[0]):
         w[0] = round((rad_angles[0] - radians(old_angles[0])) / dt,2)
     # if(not(accel[2]+g*cos(rad_angles[0]) > k[0] or accel[2]+g*cos(rad_angles[0] < -k[0] or accel[1]+g*sin(rad_angles[0]) > k[0] or accel[1]+g*sin(rad_angles[0] < -k[0]))):
@@ -93,6 +112,7 @@ def listener(dt=0.1):
     else:
         w[2] = 0.0    
 
+    #  Compute angular velocity from mean
     # print(f'Accel around x: {accel[0]}')
     # print(f'Accel around y: {accel[1]}')
     # cur_w[0] = (angles[0] - old_angles[0]) # Find Difference in value
@@ -114,6 +134,7 @@ def listener(dt=0.1):
     #     total_w[0] = 0; total_w[1] = 0; total_w[2] = 0
     #     cnt = -1
     #     print(w[2])
+
     # Compute covarience
     if t < nof_samples and not stop:
         t += 1
@@ -121,7 +142,6 @@ def listener(dt=0.1):
     elif t>=nof_samples and not stop:
         stop = True
         t += 1
-        # er = calculate_error(data_accel)
         b = calibrate_accel(data_accel)
     elif t>nof_samples and t<2*nof_samples+2:
         accel = list(np.round(np.divide(accel,b),2))
@@ -133,8 +153,10 @@ def listener(dt=0.1):
         calculate_error(data_accel)
     else:
         accel = list(np.round(np.divide(accel,b),2))
-        # print(accel)
         print(w)
+
+        assign_imu_msg(angles, accel, w)
+        
 
 
 
@@ -144,9 +166,9 @@ if __name__ == '__main__':
 
     rospy.Subscriber("angle", Vector3, get_angles)
     rospy.Subscriber("acceleration", Vector3, get_accel)
-    pub = rospy.Publisher('angular_velocity', Vector3)
+    pub = rospy.Publisher('IMU', Imu)
     # rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         listener()
-        pub.publish(w)
+        pub.publish(imu_msg)
     rospy.spin()
