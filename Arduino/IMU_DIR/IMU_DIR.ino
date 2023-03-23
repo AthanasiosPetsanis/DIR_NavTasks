@@ -29,7 +29,7 @@ void setup() {
   nh.initNode();
   nh.advertise(angle_pub);
   nh.advertise(accel_pub);
-  nh.advertise(Q_angle_pub);
+  // nh.advertise(Q_angle_pub);
   Wire.begin();
   
   delay(5);
@@ -43,7 +43,7 @@ void loop() {
   // Serial.println(*p_cnt);
 
   // Read Angles
-  sixDOF.getQ(Q_angles); 
+  // sixDOF.getQ(Q_angles); 
   sixDOF.getAngles(angles);
   if ( angles[0]  > 180) { angles[0] = angles[0] - 360;} // Change degrees between 180 and -180
   if ( angles[1]  > 180) { angles[1] = angles[1] - 360;} // Change degrees between 180 and -180
@@ -95,10 +95,13 @@ void loop() {
   angle_msg.z = angles[0];
   angle_pub.publish( &angle_msg );
 
-  Q_angle_msg.x = Q_angles[1];
-  Q_angle_msg.y = Q_angles[2];
-  Q_angle_msg.z = Q_angles[0];
-  Q_angle_pub.publish( &Q_angle_msg );
+  // Q_angle_msg.x = Q_angles[1];
+  // Q_angle_msg.y = Q_angles[2];
+  // Q_angle_msg.z = Q_angles[0];
+  // Q_angle_pub.publish( &Q_angle_msg );
+  // Serial.print(Q_angles[0]);
+  // Serial.print(" | ");
+  // Serial.print("\n");
 
   nh.spinOnce();
 

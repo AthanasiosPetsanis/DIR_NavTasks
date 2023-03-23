@@ -58,13 +58,42 @@ def calibrate_accel(data):
     b=accel_error[2]/g
     return b
 
+class Q():
+    def __init__(self) -> None:
+        self.w = 0
+        self.x = 0
+        self.y = 0
+        self.z = 0
+q = Q()
+
+def ToQuaternion(roll, pitch, yaw):
+    global q
+
+    # Abbreviations for the various angular functions
+
+    cr = cos(roll * 0.5)
+    sr = sin(roll * 0.5)
+    cp = cos(pitch * 0.5)
+    sp = sin(pitch * 0.5)
+    cy = cos(yaw * 0.5)
+    sy = sin(yaw * 0.5)
+
+    q.w = cr * cp * cy + sr * sp * sy
+    q.x = sr * cp * cy - cr * sp * sy
+    q.y = cr * sp * cy + sr * cp * sy
+    q.z = cr * cp * sy - sr * sp * cy
+
+
+    return q
+
 def assign_imu_msg(angles, accel, w):
     global imu_msg
     # imu_msg.angular_velocity = angles
 
-    imu_msg.orientation.x = angles[0]
-    imu_msg.orientation.y = angles[1]
-    imu_msg.orientation.z = angles[2]
+    imu_msg.orientation.x = q.x
+    imu_msg.orientation.y = q.y
+    imu_msg.orientation.z = q.z
+    imu_msg.orientation.w = q.w
 
     imu_msg.linear_acceleration.x = accel[0]
     imu_msg.linear_acceleration.y = accel[1]
@@ -91,6 +120,7 @@ def listener(dt=0.1):
     rad_angles[0] = radians(angles[0])
     rad_angles[1] = radians(angles[1])
     rad_angles[2] = radians(angles[2])
+    q = ToQuaternion(rad_angles[0], rad_angles[1], rad_angles[2])
 
     #  Compute angular velocity from accel
     if(sqrt((accel[2]+g*cos(rad_angles[0]))**2 + (accel[1]+g*sin(rad_angles[0]))**2) >= k[0]):
@@ -110,7 +140,8 @@ def listener(dt=0.1):
         # wz = angles[2] - old_angles[2]
     # if(not(sqrt(accel[0]**2+accel[1]**2)>=k[2])):
     else:
-        w[2] = 0.0    
+        w[2] = 0.0
+    if w[1]>
 
     #  Compute angular velocity from mean
     # print(f'Accel around x: {accel[0]}')
@@ -153,9 +184,9 @@ def listener(dt=0.1):
         calculate_error(data_accel)
     else:
         accel = list(np.round(np.divide(accel,b),2))
-        print(w)
+        # print(w)
 
-        assign_imu_msg(angles, accel, w)
+        assign_imu_msg(q, accel, w)
         
 
 
@@ -166,7 +197,7 @@ if __name__ == '__main__':
 
     rospy.Subscriber("angle", Vector3, get_angles)
     rospy.Subscriber("acceleration", Vector3, get_accel)
-    pub = rospy.Publisher('IMU', Imu)
+    pub = rospy.Publisher('IMU', Imu, queue_size=10)
     # rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         listener()
