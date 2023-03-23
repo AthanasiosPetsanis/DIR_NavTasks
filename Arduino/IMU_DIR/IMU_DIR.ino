@@ -4,22 +4,13 @@
 #include <Wire.h>
 
 #include <ros.h>
-#include <std_msgs/Float32.h>
 #include <geometry_msgs/Vector3.h>
 
-// float Q_angles[3]; // angles in degrees
+// float Q_angles[3]; // angles in quaternion
 float angles[3]; // angles in degrees
 int int_accel[3]; 
 float accel[3]; // acceleration in xyz (including graivity) in g
 
-// Loop counter
-int cnt = 0;
-int *p_cnt = &cnt;
-
-float total_w[3];
-float old_angles[3];
-float cur_w[3];
-float w[3];
 
 // Set the FreeSixIMU object
 FreeSixIMU sixDOF = FreeSixIMU();
@@ -27,20 +18,15 @@ FreeSixIMU sixDOF = FreeSixIMU();
 ros::NodeHandle nh;
 geometry_msgs::Vector3 angle_msg;
 geometry_msgs::Vector3 accel_msg;
-geometry_msgs::Vector3 w_msg;
 ros::Publisher angle_pub("angle", &angle_msg);
 ros::Publisher accel_pub("acceleration", &accel_msg);
-ros::Publisher w_pub("angular_velocity", &w_msg);
 
 void setup() { 
-  total_w[0] = 0; total_w[1] = 0; total_w[2] = 0;
-
 
   Serial.begin(57600);
   nh.initNode();
   nh.advertise(angle_pub);
   nh.advertise(accel_pub);
-  // nh.advertise(w_pub);
   Wire.begin();
   
   delay(5);
@@ -77,9 +63,9 @@ void loop() {
   // Read Acceleration
   sixDOF.acc.readAccel(&int_accel[0], &int_accel[1], &int_accel[2]);
 
-  accel[0] = ((float) int_accel[0])/26;  
-  accel[1] = ((float) int_accel[1])/26;  
-  accel[2] = ((float) int_accel[2])/26;  
+  // accel[0] = ((float) int_accel[0])/26;  
+  // accel[1] = ((float) int_accel[1])/26;  
+  // accel[2] = ((float) int_accel[2])/26;  
 
   // Serial.print("g in x: ");
   // Serial.print(accel_x);
@@ -88,25 +74,23 @@ void loop() {
   // Serial.print(accel_y);
   // Serial.print(" | ");
   // Serial.print("g in z: ");
-  // Serial.print(accel_z);
+  // Serial.print(int_accel[2]);
   // Serial.print(" | ");
   // Serial.print("\n");
 
   // Publish
-  accel_msg.x = accel[0];
-  accel_msg.y = accel[1];
-  accel_msg.z = accel[2];
+  // accel_msg.x = accel[0];
+  // accel_msg.y = accel[1];
+  // accel_msg.z = accel[2];
+  accel_msg.x = int_accel[0];
+  accel_msg.y = int_accel[1];
+  accel_msg.z = int_accel[2];
   accel_pub.publish( &accel_msg );
 
   angle_msg.x = angles[1];
   angle_msg.y = angles[2];
   angle_msg.z = angles[0];
   angle_pub.publish( &angle_msg );
-
-  // w_msg.x = w[0];
-  // w_msg.y = w[1];
-  // w_msg.z = w[2];
-  // w_pub.publish( &w_msg );
 
   nh.spinOnce();
 
