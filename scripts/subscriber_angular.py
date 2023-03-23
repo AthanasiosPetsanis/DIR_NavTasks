@@ -56,7 +56,6 @@ def calibrate_accel(data):
     b=accel_error[2]/g
     return b
     
-    
 def listener(dt=0.1):
     global t, start, total_w, cur_w, old_angles, angles, accel, total_dt, data_accel, stop, stop2, b, nof_samples, w
 
@@ -141,10 +140,13 @@ def listener(dt=0.1):
 
 if __name__ == '__main__':
     start = tic()
-    rospy.init_node('listener', anonymous=True)
+    rospy.init_node('arduino_listener', anonymous=True)
 
     rospy.Subscriber("angle", Vector3, get_angles)
     rospy.Subscriber("acceleration", Vector3, get_accel)
+    pub = rospy.Publisher('angular_velocity', Vector3)
+    # rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         listener()
+        pub.publish(w)
     rospy.spin()
