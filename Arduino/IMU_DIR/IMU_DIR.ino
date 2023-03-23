@@ -6,7 +6,7 @@
 #include <ros.h>
 #include <geometry_msgs/Vector3.h>
 
-// float Q_angles[3]; // angles in quaternion
+float Q_angles[3]; // angles in quaternion
 float angles[3]; // angles in degrees
 int int_accel[3]; 
 float accel[3]; // acceleration in xyz (including graivity) in g
@@ -16,8 +16,10 @@ float accel[3]; // acceleration in xyz (including graivity) in g
 FreeSixIMU sixDOF = FreeSixIMU();
 
 ros::NodeHandle nh;
+geometry_msgs::Vector3 Q_angle_msg;
 geometry_msgs::Vector3 angle_msg;
 geometry_msgs::Vector3 accel_msg;
+ros::Publisher Q_angle_pub("Q_angle", &Q_angle_msg);
 ros::Publisher angle_pub("angle", &angle_msg);
 ros::Publisher accel_pub("acceleration", &accel_msg);
 
@@ -27,6 +29,7 @@ void setup() {
   nh.initNode();
   nh.advertise(angle_pub);
   nh.advertise(accel_pub);
+  nh.advertise(Q_angle_pub);
   Wire.begin();
   
   delay(5);
@@ -40,7 +43,7 @@ void loop() {
   // Serial.println(*p_cnt);
 
   // Read Angles
-  // sixDOF.getQ(Q_angles); 
+  sixDOF.getQ(Q_angles); 
   sixDOF.getAngles(angles);
   if ( angles[0]  > 180) { angles[0] = angles[0] - 360;} // Change degrees between 180 and -180
   if ( angles[1]  > 180) { angles[1] = angles[1] - 360;} // Change degrees between 180 and -180
@@ -91,6 +94,11 @@ void loop() {
   angle_msg.y = angles[2];
   angle_msg.z = angles[0];
   angle_pub.publish( &angle_msg );
+
+  Q_angle_msg.x = Q_angles[1];
+  Q_angle_msg.y = Q_angles[2];
+  Q_angle_msg.z = Q_angles[0];
+  Q_angle_pub.publish( &Q_angle_msg );
 
   nh.spinOnce();
 
