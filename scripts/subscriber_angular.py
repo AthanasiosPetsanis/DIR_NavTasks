@@ -55,7 +55,7 @@ def calibrate_accel(data):
     # accel_error[0] = float(mean(data[:,0]))
     # accel_error[1] = float(mean(data[:,1]))
     accel_error[2] = float(mean(data[:,2]))
-    b=accel_error[2]/g
+    b = -accel_error[2]/g
     return b
 
 class Q():
@@ -123,19 +123,19 @@ def listener(dt=0.1):
     q = ToQuaternion(rad_angles[0], rad_angles[1], rad_angles[2])
 
     #  Compute angular velocity from accel
-    if(sqrt((accel[2]+g*cos(rad_angles[0]))**2 + (accel[1]+g*sin(rad_angles[0]))**2) >= k[0]):
+    if(sqrt((accel[2]+g*cos(rad_angles[0]))**2 + (accel[1]+g*sin(rad_angles[0]))**2) >= abs(k[0])):
         w[0] = round((rad_angles[0] - radians(old_angles[0])) / dt,2)
     # if(not(accel[2]+g*cos(rad_angles[0]) > k[0] or accel[2]+g*cos(rad_angles[0] < -k[0] or accel[1]+g*sin(rad_angles[0]) > k[0] or accel[1]+g*sin(rad_angles[0] < -k[0]))):
     else:
         w[0] = 0.0
 
-    if(sqrt((accel[2]+g*cos(rad_angles[1]))**2 + (accel[0]+g*sin(rad_angles[1]))**2) >= k[1]):
+    if(sqrt((accel[2]+g*cos(rad_angles[1]))**2 + (accel[0]+g*sin(rad_angles[1]))**2) >= abs(k[1])):
         w[1] = round( (rad_angles[1] - radians(old_angles[1])) / dt,2)
     # if(not(accel[2]+g*cos(angles[1]) > k[1] or accel[2]+g*cos(angles[1]) < -k[1] or accel[0]+g*sin(angles[1]) > k[1] or accel[0]+g*sin(angles[1] < -k[1]))):
     else:
         w[1] = 0.0
 
-    if(sqrt(accel[0]**2+accel[1]**2)>=k[2]):
+    if(sqrt(accel[0]**2+accel[1]**2)>=abs(k[2])):
         w[2] = round((rad_angles[2] - radians(old_angles[2])) / dt,2)
         # wz = angles[2] - old_angles[2]
     # if(not(sqrt(accel[0]**2+accel[1]**2)>=k[2])):
@@ -143,9 +143,9 @@ def listener(dt=0.1):
         w[2] = 0.0
 
     # Filter very high angular velocities
-    if w[0]>50: w[0] = 0;
-    if w[1]>50: w[1] = 0;
-    if w[2]>50: w[2] = 0;
+    if w[0]>50: w[0] = 0
+    if w[1]>50: w[1] = 0
+    if w[2]>50: w[2] = 0
 
     #  Compute angular velocity from mean
     # print(f'Accel around x: {accel[0]}')
