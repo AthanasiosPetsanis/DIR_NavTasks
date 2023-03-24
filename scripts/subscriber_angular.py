@@ -141,7 +141,11 @@ def listener(dt=0.1):
     # if(not(sqrt(accel[0]**2+accel[1]**2)>=k[2])):
     else:
         w[2] = 0.0
-    if w[1]>
+
+    # Filter very high angular velocities
+    if w[0]>50: w[0] = 0;
+    if w[1]>50: w[1] = 0;
+    if w[2]>50: w[2] = 0;
 
     #  Compute angular velocity from mean
     # print(f'Accel around x: {accel[0]}')
