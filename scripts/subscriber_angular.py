@@ -4,13 +4,14 @@ import rospy, numpy as np
 from statistics import mean
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Imu
-from thanos.General_Functions import now, tic, toc
+#from thanos.General_Functions import now, tic, toc
 
 g = 9.81
 k = np.zeros(3)
-b = 0.0
+b = 1.0
 er = 0
 w = [0, 0, 0]
+calibration_done = False
 nof_samples = 51
 imu_msg = Imu()
 
@@ -35,10 +36,10 @@ def get_angles(data):
 
 def get_accel(data):
     # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.x)
-    global accel
-    accel[0] = data.x
-    accel[1] = data.y
-    accel[2] = data.z
+    global accel, k
+    accel[0] = data.x - k[0]
+    accel[1] = data.y - k[1]
+    accel[2] = data.z - k[2]
 
 def calculate_error(data):
     global accel_error, k
@@ -59,7 +60,7 @@ def calibrate_accel(data):
     return b
 
 class Q():
-    def __init__(self) -> None:
+    def __init__(self):
         self.w = 0
         self.x = 0
         self.y = 0
@@ -105,7 +106,7 @@ def assign_imu_msg(angles, accel, w):
 
     
 def listener(dt=0.1):
-    global t, start, total_w, cur_w, old_angles, angles, accel, total_dt, data_accel, stop, stop2, b, nof_samples, w, imu_msg
+    global t, start, total_w, cur_w, old_angles, angles, accel, total_dt, data_accel, stop, stop2, b, nof_samples, w, imu_msg, calibration_done
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # name are launched, the previous one is kicked off. The
@@ -171,21 +172,27 @@ def listener(dt=0.1):
     #     print(w[2])
 
     # Compute covarience
-    if t < nof_samples and not stop:
-        t += 1
-        data_accel[t,:] = accel
-    elif t>=nof_samples and not stop:
-        stop = True
-        t += 1
-        b = calibrate_accel(data_accel)
-    elif t>nof_samples and t<2*nof_samples+2:
-        accel = list(np.round(np.divide(accel,b),2))
-        data_accel[t-nof_samples-1,:] = accel
-        t += 1
-    elif not stop2:
-        stop2 = True
-        # accel = list(np.round(np.divide(accel,b),2))
-        calculate_error(data_accel)
+    if not calibration_done:
+        if t < nof_samples and not stop:
+            t += 1
+            data_accel[t,:] = accel
+        elif t>=nof_samples and not stop:
+            stop = True
+            t += 1
+            b = calibrate_accel(data_accel)
+        elif t>nof_samples and t<2*nof_samples+2:
+            accel = list(np.round(np.divide(accel,b),2))
+            data_accel[t-nof_samples-1,:] = accel
+            t += 1
+        elif not stop2:
+            stop2 = True
+            # accel = list(np.round(np.divide(accel,b),2))
+            calculate_error(data_accel)
+            # Write calibration ended message
+            print("")
+            rospy.loginfo('\n\tError Calculated. Calibration Done. \n\t\t\tReaDIR to use MADAFAKA!')
+        else:
+            calibration_done = True
     else:
         accel = list(np.round(np.divide(accel,b),2))
         # print(w)
@@ -196,7 +203,7 @@ def listener(dt=0.1):
 
 
 if __name__ == '__main__':
-    start = tic()
+#    start = tic()
     rospy.init_node('arduino_listener', anonymous=True)
 
     rospy.Subscriber("angle", Vector3, get_angles)
