@@ -4,6 +4,7 @@ import rospy, numpy as np
 from statistics import mean
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Imu
+import std_msgs.msg
 #from thanos.General_Functions import now, tic, toc
 
 g = 9.81
@@ -210,6 +211,7 @@ if __name__ == '__main__':
     rospy.Subscriber("acceleration", Vector3, get_accel)
     pub = rospy.Publisher('IMU', Imu, queue_size=10)
     # rate = rospy.Rate(10) # 10hz
+    imu_msg.header.frame_id = 'imu_link'
     while not rospy.is_shutdown():
         listener()
         pub.publish(imu_msg)
