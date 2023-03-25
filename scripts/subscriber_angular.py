@@ -4,11 +4,8 @@ import rospy, numpy as np
 from statistics import mean
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Imu
-<<<<<<< HEAD
 from tf import TransformBroadcaster
-=======
 import std_msgs.msg
->>>>>>> ca330ba94854ea8fc37b9b59a4a42a1c7bcf0786
 #from thanos.General_Functions import now, tic, toc
 
 g = 9.81
