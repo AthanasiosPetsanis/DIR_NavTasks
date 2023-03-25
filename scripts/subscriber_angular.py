@@ -4,6 +4,7 @@ import rospy, numpy as np
 from statistics import mean
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Imu
+from tf import TransformBroadcaster
 #from thanos.General_Functions import now, tic, toc
 
 g = 9.81
@@ -208,9 +209,12 @@ if __name__ == '__main__':
 
     rospy.Subscriber("angle", Vector3, get_angles)
     rospy.Subscriber("acceleration", Vector3, get_accel)
-    pub = rospy.Publisher('IMU', Imu, queue_size=10)
+    pub = rospy.Publisher('imu', Imu, queue_size=10)
     # rate = rospy.Rate(10) # 10hz
+    imu_msg.header.frame_id = 'imu_frame'
+    br = TransformBroadcaster()
     while not rospy.is_shutdown():
         listener()
+        br.sendTransform((), (), rospy.Time.now(), 'imu_frame', 'base_footprint')
         pub.publish(imu_msg)
     rospy.spin()
