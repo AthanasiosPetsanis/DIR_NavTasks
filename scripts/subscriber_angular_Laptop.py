@@ -207,15 +207,14 @@ def listener(dt=0.1):
 if __name__ == '__main__':
 #    start = tic()
     rospy.init_node('arduino_listener', anonymous=True)
-
     rospy.Subscriber("angle", Vector3, get_angles)
     rospy.Subscriber("acceleration", Vector3, get_accel)
     pub = rospy.Publisher('imu', Imu, queue_size=10)
-    # rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(10) # 10hz
     imu_msg.header.frame_id = 'imu_frame'
     br = TransformBroadcaster()
     while not rospy.is_shutdown():
         listener()
-        br.sendTransform((), (), rospy.Time.now(), 'imu_frame', 'base_footprint')
+        # br.sendTransform((), (), rospy.Time.now(), 'imu_frame', 'base_footprint')
         pub.publish(imu_msg)
     rospy.spin()
