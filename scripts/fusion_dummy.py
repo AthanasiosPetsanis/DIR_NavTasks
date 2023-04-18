@@ -29,8 +29,8 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, odom_msg.pose.pose.position.z = np.random.randn(3)
         odom_msg.pose.pose.orientation.x, odom_msg.pose.pose.orientation.y, odom_msg.pose.pose.orientation.z, odom_msg.pose.pose.orientation.w = np.random.uniform(size=4)
-        odom_msg.twist.twist.linear.x, odom_msg.twist.twist.linear.x, odom_msg.twist.twist.linear.x = np.random.randn(3)
-        odom_msg.twist.twist.angular.x, odom_msg.twist.twist.angular.x, odom_msg.twist.twist.angular.x = np.random.randn(3)
+        odom_msg.twist.twist.linear.x, odom_msg.twist.twist.linear.y, odom_msg.twist.twist.linear.z = np.random.randn(3)
+        odom_msg.twist.twist.angular.x, odom_msg.twist.twist.angular.y, odom_msg.twist.twist.angular.z = np.random.randn(3)
 
         # listener()
         imu_msg.orientation.x, imu_msg.orientation.y, imu_msg.orientation.z, imu_msg.orientation.w = np.random.uniform(size=4)
